@@ -1,136 +1,103 @@
-<!DOCTYPE html><html lang="en">
+<<!DOCTYPE html>
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRINCE TIWARI</title><style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family: sans-serif;
+  <title>My Shop</title>
+</head>
+<body style="font-family:Arial">
+
+<h2>🛒 My Shop (COD)</h2>
+
+<div id="products"></div>
+
+<h3>Cart</h3>
+<div id="cart"></div>
+
+<h3>Details</h3>
+<input id="name" placeholder="Name"><br>
+<input id="phone" placeholder="Phone"><br>
+<textarea id="address" placeholder="Address"></textarea><br>
+
+<button onclick="placeOrder()">Place COD Order</button>
+
+<hr>
+
+<h2>📦 Admin Panel</h2>
+<div id="orders"></div>
+
+<script>
+let cart = [];
+
+// Load products
+fetch("http://localhost:5000/products")
+.then(res=>res.json())
+.then(data=>{
+  let html="";
+  data.forEach(p=>{
+    html+=`<div>
+      ${p.name} ₹${p.price}
+      <button onclick='add(${JSON.stringify(p)})'>Add</button>
+    </div>`;
+  });
+  document.getElementById("products").innerHTML=html;
+});
+
+function add(p){
+  cart.push(p);
+  document.getElementById("cart").innerText =
+    cart.map(i=>i.name).join(", ");
 }
 
-body{
-  height:100vh;
-  background:linear-gradient(135deg,#020617,#0f172a);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:white;
-  overflow:hidden;
+function placeOrder(){
+  fetch("http://localhost:5000/order",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      cart,
+      customer:{
+        name:document.getElementById("name").value,
+        phone:document.getElementById("phone").value,
+        address:document.getElementById("address").value
+      }
+    })
+  })
+  .then(res=>res.json())
+  .then(d=>alert(d.msg));
 }
 
-.container{
-  width:90%;
-  max-width:350px;
-  text-align:center;
-  padding:20px;
-  border-radius:20px;
-  backdrop-filter:blur(15px);
-  background:rgba(255,255,255,0.05);
-  box-shadow:0 0 40px rgba(0,255,200,0.2);
-  animation:fadeIn 1s ease;
+// Admin orders
+function loadOrders(){
+  fetch("http://localhost:5000/admin/orders")
+  .then(res=>res.json())
+  .then(data=>{
+    let html="";
+    data.forEach(o=>{
+      html+=`<div style="border:1px solid #000;margin:10px;padding:10px">
+        <b>${o.customer.name}</b> (${o.customer.phone})<br>
+        ${o.customer.address}<br>
+        Total: ₹${o.total}<br>
+        Status: ${o.status}<br>
+
+        <select onchange="update('${o._id}', this.value)">
+          <option>COD_PENDING</option>
+          <option>SHIPPED</option>
+          <option>DELIVERED</option>
+        </select>
+      </div>`;
+    });
+    document.getElementById("orders").innerHTML=html;
+  });
 }
 
-@keyframes fadeIn{
-  from{opacity:0; transform:translateY(30px);}
-  to{opacity:1; transform:translateY(0);}
+function update(id,status){
+  fetch("http://localhost:5000/admin/update/"+id,{
+    method:"PUT",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({status})
+  }).then(()=>loadOrders());
 }
 
-.profile{
-  width:120px;
-  height:120px;
-  border-radius:50%;
-  border:3px solid #00ffcc;
-  margin-bottom:10px;
-  animation:pop 1s ease;
-}
+loadOrders();
+</script>
 
-@keyframes pop{
-  0%{transform:scale(0);}
-  100%{transform:scale(1);}
-}
-
-h1{
-  margin:10px 0;
-  font-size:24px;
-}
-
-.bio{
-  font-size:14px;
-  color:#aaa;
-  margin-bottom:15px;
-}
-
-.link{
-  display:block;
-  background:linear-gradient(45deg,#00ffcc,#00ffaa);
-  color:black;
-  padding:12px;
-  margin:10px 0;
-  border-radius:10px;
-  text-decoration:none;
-  font-weight:bold;
-  transition:0.3s;
-}
-
-.link:hover{
-  transform:scale(1.07);
-  box-shadow:0 0 15px #00ffcc;
-}
-
-#musicBtn{
-  margin-top:10px;
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  background:#00ffcc;
-  font-weight:bold;
-}
-
-.footer{
-  margin-top:15px;
-  font-size:12px;
-  color:#777;
-}
-
-.bg{
-  position:absolute;
-  width:200%;
-  height:200%;
-  background:radial-gradient(circle,#00ffcc22,#000);
-  animation:move 10s linear infinite;
-  z-index:-1;
-}
-
-@keyframes move{
-  0%{transform:translate(0,0);}
-  50%{transform:translate(-50px,-50px);}
-  100%{transform:translate(0,0);}
-}
-</style></head><body><div class="bg"></div><div class="container"><img class="profile" src="https://via.placeholder.com/150" alt="profile"><h1>Ishu Kumar 🔥</h1>
-<p class="bio">💻 Web Developer | 🎮 Gamer | 🚀 Dream Big</p><a class="link" href="https://instagram.com/" target="_blank">📸 Instagram</a>
-<a class="link" href="https://youtube.com/" target="_blank">▶ YouTube</a>
-<a class="link" href="https://wa.me/" target="_blank">💬 WhatsApp</a>
-<a class="link" href="https://github.com/" target="_blank">🌐 My Projects</a>
-
-<button onclick="toggleMusic()" id="musicBtn">🔊 Music On</button>
-
-<div class="footer">Made with ❤️ by Ishu</div></div><audio id="bgMusic" loop>
-  <source src="https://www.bensound.com/bensound-music/bensound-dreams.mp3" type="audio/mpeg">
-</audio><script>
-let music = document.getElementById("bgMusic");
-let isPlaying = false;
-
-function toggleMusic(){
-  if(isPlaying){
-    music.pause();
-    document.getElementById("musicBtn").innerText = "🔇 Music Off";
-  } else {
-    music.play();
-    document.getElementById("musicBtn").innerText = "🔊 Music On";
-  }
-  isPlaying = !isPlaying;
-}
-</script></body>
+</body>
 </html>
